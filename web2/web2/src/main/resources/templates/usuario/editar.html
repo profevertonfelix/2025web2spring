@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xlms:th="http://www.thymeleaf.org">
+	<head>
+	</head>
+	<body>
+		<h2>Editar Usuário</h2>
+		<form method="post">
+			Nome:<input type="text" name="nome" 
+			th:value="${nome}"/> <br />
+			Email:<input type="email" name="email" 
+			th:value="${email}"/> <br />
+			Senha:<input type="password" name="senha" 
+						th:value="${senha}"/> <br />
+			<button type="submit">Enviar</button>	
+		</form>
+	</body>
+</html>
