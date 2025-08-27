@@ -24,6 +24,16 @@ public class Usuario implements Serializable {
 	
 	@NotBlank
 	private String senha;
+	
+	private String imagem;
+
+	public String getImagem() {
+		return imagem;
+	}
+
+	public void setImagem(String imagem) {
+		this.imagem = imagem;
+	}
 
 	public int getId() {
 		return id;

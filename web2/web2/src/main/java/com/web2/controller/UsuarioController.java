@@ -1,5 +1,10 @@
 package com.web2.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +17,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -33,23 +41,62 @@ public class UsuarioController {
 	}
 	
 	@PostMapping("/inserir")
-	public String inserido(@ModelAttribute @Valid UsuarioDTO dto, 
-			BindingResult result, RedirectAttributes msg) {
+	public String inserido(
+			@ModelAttribute @Valid UsuarioDTO dto, 
+			BindingResult result, 
+			RedirectAttributes msg,
+			@RequestParam("file") MultipartFile imagem) {
 		if(result.hasErrors()) {
 			msg.addFlashAttribute("erro", "Erro ao inserir!");
-			return "redirect:/usuario/inserir";
+			return "redirect:/usuario/listar";
 		}
-		var usuario = new Usuario();
+		var usuario = new Usuario();		
 		BeanUtils.copyProperties(dto, usuario);
+		try {
+			if(!imagem.isEmpty()) {
+				byte[] bytes = imagem.getBytes();
+				
+				Path caminho = Paths.get(
+						"./src/main/resources/static/img/"+
+								imagem.getOriginalFilename());
+				
+				Files.write(caminho, bytes);
+				usuario.setImagem(imagem.getOriginalFilename());
+			}
+		}catch(IOException e) {
+			System.out.println("erro imagem");
+		}
 		repository.save(usuario);
-		msg.addFlashAttribute("sucesso", "Usuário inserido!");
-		return "redirect:/usuario/inserir";
+		msg.addFlashAttribute("inserirok", "Usuário inserido!");
+		return "redirect:/usuario/listar";
 	}
+	
+	@GetMapping("/imagem/{imagem}")
+	@ResponseBody
+	public byte[] mostraImagem(@PathVariable("imagem") String imagem) 
+			throws IOException {
+		File nomeArquivo = 
+				new File("./src/main/resources/static/img/"+imagem);
+		if(imagem != null || imagem.trim().length()>0) {
+			return Files.readAllBytes(nomeArquivo.toPath());
+		}
+		return null;
+	}
+	
 	
 	@GetMapping("/listar")
 	public ModelAndView listar() {
 		ModelAndView mv = new ModelAndView("/usuario/listar");
 		List<Usuario> lista = repository.findAll();
+		mv.addObject("usuarios", lista);
+		return mv;
+	}
+	@PostMapping("/listar")
+	public ModelAndView listarusuariosFind
+	(@RequestParam("busca") String buscar){
+		ModelAndView mv = new ModelAndView("usuario/listar");
+		List<Usuario> lista = 
+				repository.findUsuarioByNomeLike("%"+buscar+"%");
 		mv.addObject("usuarios", lista);
 		return mv;
 	}
@@ -90,6 +137,7 @@ public class UsuarioController {
 		msg.addFlashAttribute("sucesso", "Usuário editado!");
 		return "redirect:/usuario/listar";
 	}
+	
 }
 
 
